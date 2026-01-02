@@ -1,0 +1,145 @@
+// --- 1. CẤU HÌNH TRÌNH TẠO CLIENT (GENERATOR) ---
+// Chỉ thị cho Prisma tạo ra thư viện "Prisma Client" (dựa trên schema này)
+// để ứng dụng Node.js có thể tương tác với CSDL thông qua các object/method.
+generator client {
+  provider = "prisma-client-js"
+  // Kích hoạt tính năng xem trước (Preview Features) hỗ trợ PostgreSQL:
+  // - fullTextSearchPostgres: Cho phép tìm kiếm văn bản nâng cao (Full-text Search).
+  // - postgresqlExtensions: Cho phép cài đặt các extension bổ sung của Postgres.
+  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
+}
+
+// --- 2. CẤU HÌNH KẾT NỐI CSDL (DATASOURCE) ---
+// Xác định loại CSDL là PostgreSQL và lấy chuỗi kết nối bảo mật từ biến môi trường.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Thêm Model Review
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      // 1 đến 5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  userId    Int
+  productId Int
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  @@unique([userId, productId])
+}
+
+// --- MODEL USER (Người dùng) ---
+// Bảng lưu trữ thông tin định danh, xác thực và hồ sơ người dùng.
+model User {
+  id             Int      @id @default(autoincrement()) // Khóa chính (Primary Key), tự động tăng.
+  email          String   @unique                       // Email đăng nhập, có ràng buộc duy nhất (Unique).
+  password_hash  String                                 // Lưu mật khẩu đã được mã hóa (Hashed Password) để bảo mật.
+  phone_number   String   @unique                       // Số điện thoại liên lạc, có ràng buộc duy nhất.
+  full_name      String?                                // Họ tên đầy đủ (Optional - có thể null).
+  address        String?                                // Địa chỉ giao hàng mặc định (Optional).
+  avatar_url     String?                                // Đường dẫn ảnh đại diện hoặc chuỗi Base64 (Optional).
+  role           String   @default("customer")          // Phân quyền người dùng (RBAC). Mặc định là "customer".
+  created_at     DateTime @default(now())               // Thời gian tạo tài khoản, mặc định là thời điểm hiện tại.
+  
+  // Quan hệ 1-N (Một User tạo nhiều Product): Dùng cho role Sales/Admin quản lý sản phẩm.
+  createdProducts Product[] @relation("ProductCreator")
+
+  // Quan hệ 1-N: Một User có thể có nhiều Đơn hàng (Order).
+  orders    Order[]
+  // Quan hệ 1-N: Một User có thể có nhiều sản phẩm trong Giỏ hàng (CartItem).
+  cartItems CartItem[]
+  reviews   Review[]
+}
+
+// --- MODEL CATEGORY (Danh mục sản phẩm) ---
+// Bảng lưu trữ các nhóm/loại sản phẩm để phân loại.
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique                       // Tên danh mục (duy nhất).
+  
+  // Quan hệ 1-N: Một Danh mục chứa nhiều Sản phẩm.
+  products  Product[] 
+}
+
+// --- MODEL PRODUCT (Sản phẩm) ---
+// Bảng lưu trữ thông tin chi tiết về hàng hóa/dịch vụ được bán.
+model Product {
+  id                   Int      @id @default(autoincrement())
+  name                 String   
+  description          String?                        // Mô tả ngắn gọn (hiển thị ở danh sách).
+  detailed_description String?  @db.Text              // Mô tả chi tiết (dùng kiểu Text để lưu nội dung dài/HTML).
+  images               String[] @default([])          // Mảng String lưu danh sách URL ảnh phụ (Gallery).
+  price                Decimal  @db.Decimal(10, 2)    // Giá bán. Dùng Decimal(10,2) để đảm bảo độ chính xác tiền tệ.
+  image_url            String?                        // URL ảnh đại diện (Thumbnail) của sản phẩm.
+  stock_quantity       Int      @default(0)           // Số lượng tồn kho thực tế.
+  isDeleted Boolean @default(false)
+  
+  // Khóa ngoại liên kết với bảng Category (Optional - sản phẩm có thể chưa phân loại).
+  category_id          Int?     
+  category             Category? @relation(fields: [category_id], references: [id])
+  
+  created_at           DateTime @default(now())
+  
+  // Khóa ngoại liên kết với bảng User (Người tạo sản phẩm - Sales/Admin).
+  createdById          Int?      
+  createdBy            User?     @relation("ProductCreator", fields: [createdById], references: [id])
+  
+
+  // Quan hệ 1-N: Sản phẩm xuất hiện trong nhiều Chi tiết đơn hàng (Lịch sử mua).
+  orderItems OrderItem[]
+  // Quan hệ 1-N: Sản phẩm xuất hiện trong nhiều Giỏ hàng của người dùng.
+  cartItems  CartItem[]
+  reviews   Review[]
+}
+
+// --- MODEL ORDER (Đơn hàng) ---
+// Bảng lưu trữ thông tin tổng quan của một giao dịch mua hàng (Transaction Header).
+model Order {
+  id          Int      @id @default(autoincrement())
+  user_id     Int                                   // Khóa ngoại: Người đặt hàng.
+  total_price Decimal  @db.Decimal(10, 2)           // Tổng giá trị đơn hàng (Snapshot giá trị tại thời điểm mua).
+  status      String   @default("pending")          // Trạng thái xử lý đơn hàng (pending, shipped, paid...).
+  order_date  DateTime @default(now())              // Ngày giờ đặt hàng.
+
+  // Quan hệ N-1: Đơn hàng thuộc về một User.
+  user User @relation(fields: [user_id], references: [id])
+
+  // Quan hệ 1-N: Đơn hàng bao gồm nhiều dòng chi tiết sản phẩm (Order Items).
+  items OrderItem[]
+}
+
+// --- MODEL ORDER_ITEM (Chi tiết dòng đơn hàng) ---
+// Bảng trung gian lưu chi tiết từng món hàng trong một đơn hàng (Transaction Lines).
+// Giúp lưu trữ lịch sử giá và số lượng tại thời điểm giao dịch xảy ra.
+model OrderItem {
+  id                Int     @id @default(autoincrement())
+  order_id          Int
+  product_id        Int
+  quantity          Int                             // Số lượng mua.
+  price_at_purchase Decimal @db.Decimal(10, 2)      // Quan trọng: Giá bán TẠI THỜI ĐIỂM MUA (Tránh ảnh hưởng khi giá gốc thay đổi).
+
+  // Các mối quan hệ liên kết với Order và Product.
+  order   Order   @relation(fields: [order_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+}
+
+// --- MODEL CART_ITEM (Giỏ hàng) ---
+// Bảng lưu trữ tạm thời các sản phẩm người dùng chọn mua nhưng chưa thanh toán.
+model CartItem {
+  id         Int @id @default(autoincrement())
+  user_id    Int
+  product_id Int
+  quantity   Int
+
+  // Các mối quan hệ liên kết.
+  user    User    @relation(fields: [user_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  // Ràng buộc duy nhất phức hợp (Composite Unique Constraint):
+  // Đảm bảo mỗi User chỉ có 1 dòng dữ liệu cho 1 Product cụ thể trong giỏ hàng.
+  // Tránh việc trùng lặp sản phẩm, thay vào đó sẽ tăng số lượng (quantity).
+  @@unique([user_id, product_id])
+}
