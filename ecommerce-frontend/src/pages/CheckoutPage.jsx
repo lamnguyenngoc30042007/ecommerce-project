@@ -51,7 +51,7 @@ function CheckoutPage() {
 
         // 1. Lấy thông tin Giỏ hàng (Kèm thông tin người bán)
         // Lưu ý: API /api/cart ở Backend phải có include: { product: { include: { createdBy: true } } }
-        const cartRes = await axios.get("http://localhost:3000/api/cart", {
+        const cartRes = await axios.get("https://ecommerce-project-i12t.onrender.com/api/cart", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -62,12 +62,9 @@ function CheckoutPage() {
         setCartItems(cartRes.data);
 
         // 2. Lấy thông tin User
-        const userRes = await axios.get(
-          "http://localhost:3000/api/users/profile",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const userRes = await axios.get("https://ecommerce-project-i12t.onrender.com/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUserAddress(userRes.data.address || "");
         setUserName(userRes.data.full_name || "");
         setUserPhone(userRes.data.phone_number || "");
@@ -81,8 +78,7 @@ function CheckoutPage() {
 
   // --- HÀM GOM NHÓM SẢN PHẨM THEO SHOP ---
   const groupedItems = cartItems.reduce((acc, item) => {
-    const sellerName =
-      item.product.createdBy?.full_name || "Cửa hàng chính hãng";
+    const sellerName = item.product.createdBy?.full_name || "Cửa hàng chính hãng";
     const sellerId = item.product.createdById || "system";
 
     if (!acc[sellerId]) {
@@ -103,7 +99,7 @@ function CheckoutPage() {
       const token = localStorage.getItem("token");
       // Gọi API tách đơn phía Backend
       const res = await axios.post(
-        "http://localhost:3000/api/orders/checkout",
+        "https://ecommerce-project-i12t.onrender.com/api/orders/checkout",
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -133,10 +129,7 @@ function CheckoutPage() {
         {/* --- CỘT TRÁI: THÔNG TIN ĐƠN HÀNG (ĐÃ TÁCH SHOP) --- */}
         <Grid item xs={12} md={6}>
           {/* Địa chỉ nhận hàng */}
-          <Paper
-            elevation={3}
-            sx={{ p: 3, mb: 3, borderLeft: "5px solid #1976d2" }}
-          >
+          <Paper elevation={3} sx={{ p: 3, mb: 3, borderLeft: "5px solid #1976d2" }}>
             <Box
               sx={{
                 display: "flex",
@@ -168,11 +161,7 @@ function CheckoutPage() {
           </Typography>
 
           {Object.keys(groupedItems).map((sellerId) => (
-            <Paper
-              key={sellerId}
-              elevation={3}
-              sx={{ mb: 2, overflow: "hidden" }}
-            >
+            <Paper key={sellerId} elevation={3} sx={{ mb: 2, overflow: "hidden" }}>
               {/* Header tên Shop */}
               <Box
                 sx={{
@@ -184,11 +173,7 @@ function CheckoutPage() {
                 }}
               >
                 <StorefrontIcon fontSize="small" color="primary" />
-                <Typography
-                  variant="subtitle2"
-                  fontWeight="bold"
-                  color="primary"
-                >
+                <Typography variant="subtitle2" fontWeight="bold" color="primary">
                   Đơn hàng từ: {groupedItems[sellerId].name}
                 </Typography>
               </Box>
@@ -196,15 +181,9 @@ function CheckoutPage() {
               <List dense>
                 {groupedItems[sellerId].items.map((item) => (
                   <ListItem key={item.id}>
-                    <ListItemText
-                      primary={item.product.name}
-                      secondary={`Số lượng: ${item.quantity}`}
-                    />
+                    <ListItemText primary={item.product.name} secondary={`Số lượng: ${item.quantity}`} />
                     <Typography variant="body2" fontWeight="bold">
-                      {(
-                        Number(item.product.price) * item.quantity
-                      ).toLocaleString()}{" "}
-                      ₫
+                      {(Number(item.product.price) * item.quantity).toLocaleString()} ₫
                     </Typography>
                   </ListItem>
                 ))}
@@ -238,17 +217,13 @@ function CheckoutPage() {
             </Typography>
 
             <FormControl component="fieldset">
-              <RadioGroup
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              >
+              <RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
                 <FormControlLabel
                   value="cod"
                   control={<Radio />}
                   label={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LocalShippingIcon color="action" /> Thanh toán khi nhận
-                      hàng (COD)
+                      <LocalShippingIcon color="action" /> Thanh toán khi nhận hàng (COD)
                     </Box>
                   }
                 />
@@ -257,8 +232,7 @@ function CheckoutPage() {
                   control={<Radio />}
                   label={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <AccountBalanceIcon color="primary" /> Chuyển khoản ngân
-                      hàng
+                      <AccountBalanceIcon color="primary" /> Chuyển khoản ngân hàng
                     </Box>
                   }
                 />
@@ -278,11 +252,7 @@ function CheckoutPage() {
                 <Typography variant="subtitle2" gutterBottom>
                   Quét mã để thanh toán:
                 </Typography>
-                <img
-                  src={qrUrl}
-                  alt="QR Code"
-                  style={{ width: "100%", maxWidth: "250px" }}
-                />
+                <img src={qrUrl} alt="QR Code" style={{ width: "100%", maxWidth: "250px" }} />
                 <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                   *Nội dung: 0823448678
                 </Typography>
@@ -290,25 +260,11 @@ function CheckoutPage() {
             )}
 
             {userAddress ? (
-              <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                sx={{ mt: 3 }}
-                onClick={handlePlaceOrder}
-                disabled={loading}
-              >
+              <Button fullWidth variant="contained" size="large" sx={{ mt: 3 }} onClick={handlePlaceOrder} disabled={loading}>
                 {loading ? "Đang xử lý..." : "Xác Nhận Đặt Hàng"}
               </Button>
             ) : (
-              <Button
-                fullWidth
-                variant="contained"
-                color="warning"
-                size="large"
-                sx={{ mt: 3 }}
-                onClick={() => navigate("/profile")}
-              >
+              <Button fullWidth variant="contained" color="warning" size="large" sx={{ mt: 3 }} onClick={() => navigate("/profile")}>
                 Cập nhật địa chỉ ngay
               </Button>
             )}

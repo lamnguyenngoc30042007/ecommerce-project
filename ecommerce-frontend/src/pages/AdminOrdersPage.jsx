@@ -50,12 +50,9 @@ function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:3000/api/admin/orders",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get("https://ecommerce-project-i12t.onrender.com/api/admin/orders", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setOrders(response.data);
     } catch (error) {
       console.error(error);
@@ -72,7 +69,7 @@ function AdminOrdersPage() {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:3000/api/admin/orders/${orderId}/status`,
+        `https://ecommerce-project-i12t.onrender.com/api/admin/orders/${orderId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,8 +83,7 @@ function AdminOrdersPage() {
   return (
     <Container maxWidth="xl" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom fontWeight="bold">
-        Quản Lý Đơn Hàng (
-        {currentUserRole === "admin" ? "Toàn hệ thống" : "Của Shop tôi"})
+        Quản Lý Đơn Hàng ({currentUserRole === "admin" ? "Toàn hệ thống" : "Của Shop tôi"})
       </Typography>
 
       <TableContainer component={Paper}>
@@ -108,9 +104,7 @@ function AdminOrdersPage() {
                 <TableCell>#{order.id}</TableCell>
 
                 <TableCell>
-                  <Typography fontWeight="bold">
-                    {order.user?.full_name || "Đã xóa"}
-                  </Typography>
+                  <Typography fontWeight="bold">{order.user?.full_name || "Đã xóa"}</Typography>
                   <Typography variant="caption" display="block">
                     {order.user?.email}
                   </Typography>
@@ -124,9 +118,7 @@ function AdminOrdersPage() {
                     // KIỂM TRA: Sản phẩm này có phải của tôi không?
                     // Nếu là Admin: Luôn là true
                     // Nếu là Sales: So sánh createdById với currentUserId
-                    const isMyProduct =
-                      currentUserRole === "admin" ||
-                      item.product?.createdById === currentUserId;
+                    const isMyProduct = currentUserRole === "admin" || item.product?.createdById === currentUserId;
 
                     return (
                       <Box
@@ -139,11 +131,7 @@ function AdminOrdersPage() {
                       >
                         - {item.product?.name} (x{item.quantity})
                         {!isMyProduct && (
-                          <Typography
-                            component="span"
-                            variant="caption"
-                            color="error"
-                          >
+                          <Typography component="span" variant="caption" color="error">
                             {" "}
                             (Shop khác)
                           </Typography>
@@ -153,29 +141,18 @@ function AdminOrdersPage() {
                   })}
                 </TableCell>
 
-                <TableCell sx={{ color: "red", fontWeight: "bold" }}>
-                  {Number(order.total_price).toLocaleString()} ₫
-                </TableCell>
+                <TableCell sx={{ color: "red", fontWeight: "bold" }}>{Number(order.total_price).toLocaleString()} ₫</TableCell>
 
-                <TableCell>
-                  {new Date(order.order_date).toLocaleDateString()}
-                </TableCell>
+                <TableCell>{new Date(order.order_date).toLocaleDateString()}</TableCell>
 
                 <TableCell>
                   <Select
                     size="small"
                     value={order.status}
-                    onChange={(e) =>
-                      handleStatusChange(order.id, e.target.value)
-                    }
+                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
                     sx={{
                       fontSize: "0.875rem",
-                      color:
-                        order.status === "cancelled"
-                          ? "red"
-                          : order.status === "delivered"
-                          ? "green"
-                          : "orange",
+                      color: order.status === "cancelled" ? "red" : order.status === "delivered" ? "green" : "orange",
                     }}
                   >
                     <MenuItem value="pending">Chờ xử lý</MenuItem>

@@ -24,10 +24,7 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/users/login",
-        formData
-      );
+      const response = await axios.post("https://ecommerce-project-i12t.onrender.com/api/users/login", formData);
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("role", response.data.role);
       toast.success("Đăng nhập thành công!");
@@ -53,11 +50,7 @@ function LoginPage() {
           Đăng Nhập
         </Typography>
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ mt: 3, width: "100%" }}
-        >
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: "100%" }}>
           {" "}
           {/* Thêm width 100% */}
           {/* --- 2. DÙNG STACK THAY CHO GRID --- */}
@@ -97,11 +90,7 @@ function LoginPage() {
 
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Button
-                  color="primary"
-                  onClick={() => navigate("/register")}
-                  sx={{ textTransform: "none" }}
-                >
+                <Button color="primary" onClick={() => navigate("/register")} sx={{ textTransform: "none" }}>
                   Chưa có tài khoản? Đăng ký ngay
                 </Button>
               </Grid>

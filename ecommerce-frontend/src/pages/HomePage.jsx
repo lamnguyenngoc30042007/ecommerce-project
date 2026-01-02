@@ -51,7 +51,7 @@ function HomePage() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/categories")
+      .get("https://ecommerce-project-i12t.onrender.com/api/categories")
       .then((res) => setCategories(res.data))
       .catch(console.error);
   }, []);
@@ -60,15 +60,14 @@ function HomePage() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        let url = "http://localhost:3000/api/products";
+        let url = "https://ecommerce-project-i12t.onrender.com/api/products";
         const params = [];
 
         if (searchTerm) {
-          url = `http://localhost:3000/api/products/search?q=${searchTerm}`;
+          url = `https://ecommerce-project-i12t.onrender.com/api/products/search?q=${searchTerm}`;
           setSelectedCategoryId(null);
         } else {
-          if (selectedCategoryId)
-            params.push(`categoryId=${selectedCategoryId}`);
+          if (selectedCategoryId) params.push(`categoryId=${selectedCategoryId}`);
           if (priceRange.min) params.push(`minPrice=${priceRange.min}`);
           if (priceRange.max) params.push(`maxPrice=${priceRange.max}`);
           if (sortOption) params.push(`sort=${sortOption}`);
@@ -92,7 +91,7 @@ function HomePage() {
   const handleApplyFilter = async () => {
     setLoading(true);
     try {
-      let url = "http://localhost:3000/api/products";
+      let url = "https://ecommerce-project-i12t.onrender.com/api/products";
       const params = [];
       if (selectedCategoryId) params.push(`categoryId=${selectedCategoryId}`);
       if (priceRange.min) params.push(`minPrice=${priceRange.min}`);
@@ -117,7 +116,7 @@ function HomePage() {
         return;
       }
       await axios.post(
-        "http://localhost:3000/api/cart/add",
+        "https://ecommerce-project-i12t.onrender.com/api/cart/add",
         { product_id: productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -179,10 +178,7 @@ function HomePage() {
                   }}
                   sx={{ borderBottom: "1px solid #eee" }}
                 >
-                  <ListItemText
-                    primaryTypographyProps={{ fontSize: "0.9rem" }}
-                    primary="Tất cả sản phẩm"
-                  />
+                  <ListItemText primaryTypographyProps={{ fontSize: "0.9rem" }} primary="Tất cả sản phẩm" />
                 </ListItemButton>
                 {categories.map((cat) => (
                   <ListItemButton
@@ -191,10 +187,7 @@ function HomePage() {
                     onClick={() => setSelectedCategoryId(cat.id)}
                     sx={{ borderBottom: "1px solid #eee" }}
                   >
-                    <ListItemText
-                      primaryTypographyProps={{ fontSize: "0.9rem" }}
-                      primary={cat.name}
-                    />
+                    <ListItemText primaryTypographyProps={{ fontSize: "0.9rem" }} primary={cat.name} />
                   </ListItemButton>
                 ))}
               </List>
@@ -218,12 +211,7 @@ function HomePage() {
               </Box>
               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
                 <InputLabel sx={{ fontSize: "0.9rem" }}>Sắp xếp</InputLabel>
-                <Select
-                  value={sortOption}
-                  label="Sắp xếp"
-                  onChange={(e) => setSortOption(e.target.value)}
-                  sx={{ fontSize: "0.9rem" }}
-                >
+                <Select value={sortOption} label="Sắp xếp" onChange={(e) => setSortOption(e.target.value)} sx={{ fontSize: "0.9rem" }}>
                   <MenuItem value="newest">Mới nhất</MenuItem>
                   <MenuItem value="price_asc">Giá: Thấp đến Cao</MenuItem>
                   <MenuItem value="price_desc">Giá: Cao đến Thấp</MenuItem>
@@ -239,9 +227,7 @@ function HomePage() {
                   size="small"
                   type="number"
                   value={priceRange.min}
-                  onChange={(e) =>
-                    setPriceRange({ ...priceRange, min: e.target.value })
-                  }
+                  onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
                   inputProps={{ style: { fontSize: "0.85rem" } }}
                 />
                 <TextField
@@ -249,18 +235,11 @@ function HomePage() {
                   size="small"
                   type="number"
                   value={priceRange.max}
-                  onChange={(e) =>
-                    setPriceRange({ ...priceRange, max: e.target.value })
-                  }
+                  onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
                   inputProps={{ style: { fontSize: "0.85rem" } }}
                 />
               </Box>
-              <Button
-                variant="contained"
-                size="small"
-                fullWidth
-                onClick={handleApplyFilter}
-              >
+              <Button variant="contained" size="small" fullWidth onClick={handleApplyFilter}>
                 Áp dụng
               </Button>
             </Paper>
@@ -269,16 +248,8 @@ function HomePage() {
 
         {/* --- CỘT PHẢI --- */}
         <Box sx={{ flexGrow: 1 }}>
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{ fontWeight: "bold", color: "#333", mb: 2 }}
-          >
-            {searchTerm
-              ? `Kết quả: "${searchTerm}"`
-              : selectedCategoryId
-              ? `Danh mục: ${getCategoryName()}`
-              : "Tất cả sản phẩm"}
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold", color: "#333", mb: 2 }}>
+            {searchTerm ? `Kết quả: "${searchTerm}"` : selectedCategoryId ? `Danh mục: ${getCategoryName()}` : "Tất cả sản phẩm"}
           </Typography>
 
           {!loading && products.length === 0 && (
@@ -314,44 +285,24 @@ function HomePage() {
                     <CardMedia
                       component="img"
                       height="160"
-                      image={
-                        product.image_url || "https://via.placeholder.com/300"
-                      }
+                      image={product.image_url || "https://via.placeholder.com/300"}
                       alt={product.name}
                       sx={{ objectFit: "contain", p: 1 }}
                     />
                     <CardContent sx={{ width: "100%", p: 1.5 }}>
-                      <Typography
-                        gutterBottom
-                        variant="subtitle1"
-                        component="div"
-                        noWrap
-                        sx={{ fontWeight: "bold", fontSize: "0.95rem" }}
-                      >
+                      <Typography gutterBottom variant="subtitle1" component="div" noWrap sx={{ fontWeight: "bold", fontSize: "0.95rem" }}>
                         {product.name}
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        color="primary"
-                        fontWeight="bold"
-                      >
+                      <Typography variant="body2" color="primary" fontWeight="bold">
                         {Number(product.price).toLocaleString()} ₫
                       </Typography>
                       <Box sx={{ mt: 0.5 }}>
                         {product.stock_quantity > 0 ? (
-                          <Typography
-                            variant="caption"
-                            sx={{ color: "green", fontWeight: "bold" }}
-                          >
+                          <Typography variant="caption" sx={{ color: "green", fontWeight: "bold" }}>
                             Còn: {product.stock_quantity}
                           </Typography>
                         ) : (
-                          <Chip
-                            label="HẾT HÀNG"
-                            color="error"
-                            size="small"
-                            sx={{ height: 20, fontSize: "0.7rem" }}
-                          />
+                          <Chip label="HẾT HÀNG" color="error" size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
                         )}
                       </Box>
                     </CardContent>
@@ -378,12 +329,7 @@ function HomePage() {
           {/* Chỉ hiện khi số sản phẩm đang hiện < tổng sản phẩm */}
           {visibleCount < products.length && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-              <Button
-                variant="outlined"
-                onClick={handleLoadMore}
-                endIcon={<KeyboardArrowDownIcon />}
-                sx={{ borderRadius: 5, px: 4 }}
-              >
+              <Button variant="outlined" onClick={handleLoadMore} endIcon={<KeyboardArrowDownIcon />} sx={{ borderRadius: 5, px: 4 }}>
                 Xem thêm sản phẩm
               </Button>
             </Box>

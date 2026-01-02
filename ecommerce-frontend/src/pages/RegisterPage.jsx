@@ -29,7 +29,7 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:3000/api/users/register", formData);
+      await axios.post("https://ecommerce-project-i12t.onrender.com/api/users/register", formData);
       toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
       navigate("/login");
     } catch (error) {
@@ -51,11 +51,7 @@ function RegisterPage() {
           Đăng Ký Tài Khoản
         </Typography>
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ mt: 3, width: "100%" }}
-        >
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: "100%" }}>
           {/* --- DÙNG STACK ĐỂ CĂN THẲNG HÀNG --- */}
           <Stack spacing={2}>
             <TextField
@@ -99,22 +95,13 @@ function RegisterPage() {
               onChange={handleChange}
             />
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              startIcon={<AppRegistrationIcon />}
-            >
+            <Button type="submit" fullWidth variant="contained" startIcon={<AppRegistrationIcon />}>
               Đăng Ký
             </Button>
 
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Button
-                  color="primary"
-                  onClick={() => navigate("/login")}
-                  sx={{ textTransform: "none" }}
-                >
+                <Button color="primary" onClick={() => navigate("/login")} sx={{ textTransform: "none" }}>
                   Đã có tài khoản? Đăng nhập ngay
                 </Button>
               </Grid>

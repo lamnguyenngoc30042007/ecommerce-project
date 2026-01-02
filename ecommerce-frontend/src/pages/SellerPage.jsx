@@ -35,14 +35,10 @@ function SellerPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const sellerRes = await axios.get(
-          `http://localhost:3000/api/users/public/${id}`
-        );
+        const sellerRes = await axios.get(`https://ecommerce-project-i12t.onrender.com/api/users/public/${id}`);
         setSeller(sellerRes.data);
 
-        const productsRes = await axios.get(
-          `http://localhost:3000/api/products?sellerId=${id}`
-        );
+        const productsRes = await axios.get(`https://ecommerce-project-i12t.onrender.com/api/products?sellerId=${id}`);
         setProducts(productsRes.data);
       } catch (error) {
         console.error("Lỗi tải trang người bán", error);
@@ -60,7 +56,7 @@ function SellerPage() {
         return;
       }
       await axios.post(
-        "http://localhost:3000/api/cart/add",
+        "https://ecommerce-project-i12t.onrender.com/api/cart/add",
         { product_id: productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -71,8 +67,7 @@ function SellerPage() {
   };
 
   if (loading) return <Container sx={{ mt: 4 }}>Đang tải...</Container>;
-  if (!seller)
-    return <Container sx={{ mt: 4 }}>Người bán không tồn tại.</Container>;
+  if (!seller) return <Container sx={{ mt: 4 }}>Người bán không tồn tại.</Container>;
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -100,33 +95,16 @@ function SellerPage() {
             </Avatar>
           </Grid>
           <Grid item>
-            <Typography
-              variant="h4"
-              fontWeight="bold"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
+            <Typography variant="h4" fontWeight="bold" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <StorefrontIcon fontSize="large" /> {seller.full_name}
             </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}
-            >
+            <Typography variant="body1" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
               <EmailIcon fontSize="small" /> {seller.email}
             </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <PhoneIcon fontSize="small" />{" "}
-              {seller.phone_number || "Chưa cập nhật SĐT"}
+            <Typography variant="body1" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <PhoneIcon fontSize="small" /> {seller.phone_number || "Chưa cập nhật SĐT"}
             </Typography>
-            <Chip
-              label={`Đã đăng bán ${products.length} sản phẩm`}
-              color="primary"
-              sx={{ mt: 2 }}
-            />
+            <Chip label={`Đã đăng bán ${products.length} sản phẩm`} color="primary" sx={{ mt: 2 }} />
           </Grid>
         </Grid>
       </Paper>
@@ -166,13 +144,7 @@ function SellerPage() {
                   sx={{ objectFit: "contain", p: 1 }}
                 />
                 <CardContent sx={{ width: "100%", p: 1.5 }}>
-                  <Typography
-                    gutterBottom
-                    variant="subtitle1"
-                    component="div"
-                    noWrap
-                    sx={{ fontWeight: "bold" }}
-                  >
+                  <Typography gutterBottom variant="subtitle1" component="div" noWrap sx={{ fontWeight: "bold" }}>
                     {product.name}
                   </Typography>
                   <Typography variant="body2" color="primary" fontWeight="bold">
@@ -180,19 +152,11 @@ function SellerPage() {
                   </Typography>
                   <Box sx={{ mt: 0.5 }}>
                     {product.stock_quantity > 0 ? (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "green", fontWeight: "bold" }}
-                      >
+                      <Typography variant="caption" sx={{ color: "green", fontWeight: "bold" }}>
                         Còn hàng: {product.stock_quantity}
                       </Typography>
                     ) : (
-                      <Chip
-                        label="HẾT HÀNG"
-                        color="error"
-                        size="small"
-                        sx={{ height: 20, fontSize: "0.7rem" }}
-                      />
+                      <Chip label="HẾT HÀNG" color="error" size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
                     )}
                   </Box>
                 </CardContent>
@@ -213,11 +177,7 @@ function SellerPage() {
             </Card>
           </Grid>
         ))}
-        {products.length === 0 && (
-          <Typography sx={{ ml: 2, mt: 2 }}>
-            Người bán này chưa có sản phẩm nào.
-          </Typography>
-        )}
+        {products.length === 0 && <Typography sx={{ ml: 2, mt: 2 }}>Người bán này chưa có sản phẩm nào.</Typography>}
       </Grid>
     </Container>
   );

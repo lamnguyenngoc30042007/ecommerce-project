@@ -72,12 +72,9 @@ function AdminPage() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("token");
-      const resProducts = await axios.get(
-        "http://localhost:3000/api/admin/products",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const resProducts = await axios.get("https://ecommerce-project-i12t.onrender.com/api/admin/products", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProducts(resProducts.data);
       fetchCategories();
     } catch (error) {
@@ -87,7 +84,7 @@ function AdminPage() {
 
   const fetchCategories = async () => {
     try {
-      const resCats = await axios.get("http://localhost:3000/api/categories");
+      const resCats = await axios.get("https://ecommerce-project-i12t.onrender.com/api/categories");
       setCategories(resCats.data);
     } catch (error) {
       console.error(error);
@@ -107,7 +104,7 @@ function AdminPage() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:3000/api/categories",
+        "https://ecommerce-project-i12t.onrender.com/api/categories",
         { name: newCategoryName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -166,14 +163,12 @@ function AdminPage() {
       };
 
       if (isEditing) {
-        await axios.put(
-          `http://localhost:3000/api/products/${formData.id}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(`https://ecommerce-project-i12t.onrender.com/api/products/${formData.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         toast.success("Cập nhật thành công!");
       } else {
-        await axios.post("http://localhost:3000/api/products", payload, {
+        await axios.post("https://ecommerce-project-i12t.onrender.com/api/products", payload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         toast.success("Thêm mới thành công!");
@@ -194,12 +189,9 @@ function AdminPage() {
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(
-        `http://localhost:3000/api/products/${deleteProductId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`https://ecommerce-project-i12t.onrender.com/api/products/${deleteProductId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Đã xóa sản phẩm!");
       fetchData();
     } catch (error) {
@@ -214,31 +206,17 @@ function AdminPage() {
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
           <Typography variant="h4">
             Quản Lý Sản Phẩm
-            <Typography
-              component="span"
-              variant="h6"
-              color="text.secondary"
-              sx={{ ml: 2 }}
-            >
-              ({userRole === "admin" ? "Toàn bộ hệ thống" : "Gian hàng của tôi"}
-              )
+            <Typography component="span" variant="h6" color="text.secondary" sx={{ ml: 2 }}>
+              ({userRole === "admin" ? "Toàn bộ hệ thống" : "Gian hàng của tôi"})
             </Typography>
           </Typography>
           {/* 1. NÚT CHUYỂN SANG TRANG ĐƠN HÀNG (MỚI) */}
           {userRole === "admin" && (
-            <Button
-              variant="outlined"
-              startIcon={<ReceiptIcon />}
-              onClick={() => navigate("/admin/orders")}
-            >
+            <Button variant="outlined" startIcon={<ReceiptIcon />} onClick={() => navigate("/admin/orders")}>
               Xem Đơn Hàng
             </Button>
           )}
-          <Button
-            variant="contained"
-            startIcon={<AddCircleIcon />}
-            onClick={() => handleOpen(null)}
-          >
+          <Button variant="contained" startIcon={<AddCircleIcon />} onClick={() => handleOpen(null)}>
             Thêm Sản Phẩm
           </Button>
         </Box>
@@ -259,48 +237,26 @@ function AdminPage() {
               {products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
-                    <Avatar
-                      variant="square"
-                      src={product.image_url}
-                      sx={{ width: 50, height: 50 }}
-                    />
+                    <Avatar variant="square" src={product.image_url} sx={{ width: 50, height: 50 }} />
                   </TableCell>
                   <TableCell>{product.name}</TableCell>
                   {userRole === "admin" && (
                     <TableCell>
                       {product.createdBy ? (
-                        <Chip
-                          label={
-                            product.createdBy.full_name ||
-                            product.createdBy.email
-                          }
-                          size="small"
-                        />
+                        <Chip label={product.createdBy.full_name || product.createdBy.email} size="small" />
                       ) : (
-                        <Chip
-                          label="Hệ thống"
-                          size="small"
-                          variant="outlined"
-                        />
+                        <Chip label="Hệ thống" size="small" variant="outlined" />
                       )}
                     </TableCell>
                   )}
-                  <TableCell>
-                    {Number(product.price).toLocaleString()}đ
-                  </TableCell>
+                  <TableCell>{Number(product.price).toLocaleString()}đ</TableCell>
                   <TableCell>{product.stock_quantity}</TableCell>
                   <TableCell align="right">
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleOpen(product)}
-                    >
+                    <IconButton color="primary" onClick={() => handleOpen(product)}>
                       <EditIcon />
                     </IconButton>
                     {/* GỌI HÀM confirmDelete THAY VÌ handleDelete TRỰC TIẾP */}
-                    <IconButton
-                      color="error"
-                      onClick={() => confirmDelete(product.id)}
-                    >
+                    <IconButton color="error" onClick={() => confirmDelete(product.id)}>
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
@@ -320,40 +276,20 @@ function AdminPage() {
 
       {/* --- DIALOG SẢN PHẨM --- */}
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {isEditing ? "Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}
-        </DialogTitle>
+        <DialogTitle>{isEditing ? "Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={3}>
             <Grid item xs={8}>
-              <TextField
-                fullWidth
-                label="Tên sản phẩm"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-              />
+              <TextField fullWidth label="Tên sản phẩm" name="name" value={formData.name} onChange={handleChange} />
             </Grid>
             <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="Giá"
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleChange}
-              />
+              <TextField fullWidth label="Giá" name="price" type="number" value={formData.price} onChange={handleChange} />
             </Grid>
             <Grid item xs={8}>
               <Box sx={{ display: "flex", gap: 1 }}>
                 <FormControl fullWidth>
                   <InputLabel>Danh mục</InputLabel>
-                  <Select
-                    name="category_id"
-                    value={formData.category_id}
-                    label="Danh mục"
-                    onChange={handleChange}
-                  >
+                  <Select name="category_id" value={formData.category_id} label="Danh mục" onChange={handleChange}>
                     {categories.map((cat) => (
                       <MenuItem key={cat.id} value={cat.id}>
                         {cat.name}
@@ -362,45 +298,20 @@ function AdminPage() {
                   </Select>
                 </FormControl>
                 <Tooltip title="Thêm danh mục mới">
-                  <Button
-                    variant="outlined"
-                    onClick={handleOpenCatDialog}
-                    sx={{ minWidth: "50px", height: "56px" }}
-                  >
+                  <Button variant="outlined" onClick={handleOpenCatDialog} sx={{ minWidth: "50px", height: "56px" }}>
                     <AddBoxIcon />
                   </Button>
                 </Tooltip>
               </Box>
             </Grid>
             <Grid item xs={4}>
-              <TextField
-                fullWidth
-                label="Tồn kho"
-                name="stock_quantity"
-                type="number"
-                value={formData.stock_quantity}
-                onChange={handleChange}
-              />
+              <TextField fullWidth label="Tồn kho" name="stock_quantity" type="number" value={formData.stock_quantity} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Link ảnh"
-                name="image_url"
-                value={formData.image_url}
-                onChange={handleChange}
-              />
+              <TextField fullWidth label="Link ảnh" name="image_url" value={formData.image_url} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={2}
-                label="Mô tả ngắn"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-              />
+              <TextField fullWidth multiline rows={2} label="Mô tả ngắn" name="description" value={formData.description} onChange={handleChange} />
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -426,12 +337,7 @@ function AdminPage() {
       </Dialog>
 
       {/* --- DIALOG TẠO DANH MỤC --- */}
-      <Dialog
-        open={openCatDialog}
-        onClose={() => setOpenCatDialog(false)}
-        maxWidth="xs"
-        fullWidth
-      >
+      <Dialog open={openCatDialog} onClose={() => setOpenCatDialog(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Tạo Danh Mục Mới</DialogTitle>
         <DialogContent>
           <TextField
@@ -455,10 +361,7 @@ function AdminPage() {
       </Dialog>
 
       {/* --- DIALOG XÁC NHẬN XÓA (MỚI) --- */}
-      <Dialog
-        open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
-      >
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
         <DialogTitle
           sx={{
             display: "flex",
@@ -470,21 +373,13 @@ function AdminPage() {
           <WarningIcon /> Xác nhận xóa
         </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn
-            tác.
-          </DialogContentText>
+          <DialogContentText>Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác.</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">
             Hủy
           </Button>
-          <Button
-            onClick={handleDelete}
-            variant="contained"
-            color="error"
-            autoFocus
-          >
+          <Button onClick={handleDelete} variant="contained" color="error" autoFocus>
             Xóa Ngay
           </Button>
         </DialogActions>

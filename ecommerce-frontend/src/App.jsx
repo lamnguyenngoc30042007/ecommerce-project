@@ -3,17 +3,7 @@ import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // --- 1. IMPORT CÁC COMPONENT CỦA MUI ---
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  Container,
-  Box,
-  IconButton,
-  TextField,
-  Autocomplete,
-} from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Container, Box, IconButton, TextField, Autocomplete } from "@mui/material";
 
 // --- 2. IMPORT CÁC ICON ---
 import HomeIcon from "@mui/icons-material/Home";
@@ -87,9 +77,7 @@ function App() {
     }
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:3000/api/products/search?q=${value}`
-      );
+      const response = await axios.get(`https://ecommerce-project-i12t.onrender.com/api/products/search?q=${value}`);
       setOptions(response.data);
     } catch (error) {
       console.error("Lỗi tìm kiếm:", error);
@@ -105,12 +93,7 @@ function App() {
       <AppBar position="static" style={{ marginBottom: "20px" }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            <Button
-              color="inherit"
-              component={MuiLink}
-              to="/"
-              startIcon={<HomeIcon />}
-            >
+            <Button color="inherit" component={MuiLink} to="/" startIcon={<HomeIcon />}>
               My E-Commerce
             </Button>
           </Typography>
@@ -135,14 +118,7 @@ function App() {
                 window.location.reload();
               }
             }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Tìm kiếm..."
-                size="small"
-                sx={{ bgcolor: "white", borderRadius: 1 }}
-              />
-            )}
+            renderInput={(params) => <TextField {...params} label="Tìm kiếm..." size="small" sx={{ bgcolor: "white", borderRadius: 1 }} />}
           />
 
           {isLoggedIn ? (
@@ -151,35 +127,20 @@ function App() {
 
               {/* 1. Nút Thống Kê (Chỉ Admin thấy) */}
               {(userRole === "admin" || userRole === "sales") && (
-                <Button
-                  color="inherit"
-                  component={MuiLink}
-                  to="/admin/dashboard"
-                  startIcon={<DashboardIcon />}
-                >
+                <Button color="inherit" component={MuiLink} to="/admin/dashboard" startIcon={<DashboardIcon />}>
                   Thống Kê
                 </Button>
               )}
 
               {/* 2. Nút Quản Lý Sản Phẩm (Admin & Sales) */}
               {(userRole === "admin" || userRole === "sales") && (
-                <Button
-                  color="inherit"
-                  component={MuiLink}
-                  to="/admin"
-                  startIcon={<AdminPanelSettingsIcon />}
-                >
+                <Button color="inherit" component={MuiLink} to="/admin" startIcon={<AdminPanelSettingsIcon />}>
                   Quản Lý
                 </Button>
               )}
 
               {/* --- NHÓM KHÁCH HÀNG --- */}
-              <Button
-                color="inherit"
-                component={MuiLink}
-                to="/orders"
-                startIcon={<ReceiptLongIcon />}
-              >
+              <Button color="inherit" component={MuiLink} to="/orders" startIcon={<ReceiptLongIcon />}>
                 Đơn Mua
               </Button>
 
@@ -189,30 +150,16 @@ function App() {
               <IconButton color="inherit" component={MuiLink} to="/cart">
                 <ShoppingCartIcon />
               </IconButton>
-              <Button
-                color="inherit"
-                onClick={handleLogout}
-                startIcon={<LogoutIcon />}
-              >
+              <Button color="inherit" onClick={handleLogout} startIcon={<LogoutIcon />}>
                 Đăng Xuất
               </Button>
             </>
           ) : (
             <>
-              <Button
-                color="inherit"
-                component={MuiLink}
-                to="/login"
-                startIcon={<LoginIcon />}
-              >
+              <Button color="inherit" component={MuiLink} to="/login" startIcon={<LoginIcon />}>
                 Đăng Nhập
               </Button>
-              <Button
-                color="inherit"
-                component={MuiLink}
-                to="/register"
-                startIcon={<AppRegistrationIcon />}
-              >
+              <Button color="inherit" component={MuiLink} to="/register" startIcon={<AppRegistrationIcon />}>
                 Đăng Ký
               </Button>
             </>

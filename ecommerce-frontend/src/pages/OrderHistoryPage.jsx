@@ -34,12 +34,9 @@ function OrderHistoryPage() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await axios.get(
-          "http://localhost:3000/api/orders/my-history",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get("https://ecommerce-project-i12t.onrender.com/api/orders/my-history", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setOrders(response.data);
       } catch (error) {
         console.error(error);
@@ -74,7 +71,7 @@ function OrderHistoryPage() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:3000/api/reviews",
+        "https://ecommerce-project-i12t.onrender.com/api/reviews",
         { productId: reviewProduct.id, rating, comment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -102,28 +99,15 @@ function OrderHistoryPage() {
         <Typography>Bạn chưa có đơn hàng nào.</Typography>
       ) : (
         orders.map((order) => (
-          <Paper
-            key={order.id}
-            elevation={3}
-            sx={{ mb: 3, p: 3, borderRadius: 2 }}
-          >
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
-            >
+          <Paper key={order.id} elevation={3} sx={{ mb: 3, p: 3, borderRadius: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
               <Typography variant="h6">
                 Đơn hàng #{order.id} <br />
-                <Typography
-                  component="span"
-                  variant="caption"
-                  color="text.secondary"
-                >
+                <Typography component="span" variant="caption" color="text.secondary">
                   {new Date(order.order_date).toLocaleString()}
                 </Typography>
               </Typography>
-              <Chip
-                label={order.status.toUpperCase()}
-                color={getStatusColor(order.status)}
-              />
+              <Chip label={order.status.toUpperCase()} color={getStatusColor(order.status)} />
             </Box>
 
             <Divider sx={{ mb: 2 }} />
@@ -137,10 +121,7 @@ function OrderHistoryPage() {
               // -------------------------------------------------------------------
 
               return (
-                <Box
-                  key={item.id}
-                  sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                >
+                <Box key={item.id} sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                   <img
                     src={product.image_url || "https://via.placeholder.com/50"}
                     alt={product.name}
@@ -155,18 +136,13 @@ function OrderHistoryPage() {
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography fontWeight="bold">{product.name}</Typography>
                     <Typography variant="body2">
-                      Số lượng: {item.quantity} x{" "}
-                      {Number(item.price_at_purchase).toLocaleString()} ₫
+                      Số lượng: {item.quantity} x {Number(item.price_at_purchase).toLocaleString()} ₫
                     </Typography>
                   </Box>
 
                   {/* Chỉ hiện nút đánh giá nếu đơn đã giao và sản phẩm còn tồn tại */}
                   {order.status === "delivered" && item.product && (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleOpenReview(item.product)}
-                    >
+                    <Button variant="outlined" size="small" onClick={() => handleOpenReview(item.product)}>
                       Đánh giá
                     </Button>
                   )}
@@ -178,10 +154,7 @@ function OrderHistoryPage() {
 
             <Box sx={{ textAlign: "right" }}>
               <Typography variant="h6">
-                Tổng tiền:{" "}
-                <span style={{ color: "#d32f2f" }}>
-                  {Number(order.total_price).toLocaleString()} ₫
-                </span>
+                Tổng tiền: <span style={{ color: "#d32f2f" }}>{Number(order.total_price).toLocaleString()} ₫</span>
               </Typography>
             </Box>
           </Paper>
@@ -201,19 +174,8 @@ function OrderHistoryPage() {
               minWidth: 300,
             }}
           >
-            <Rating
-              value={rating}
-              onChange={(e, val) => setRating(val)}
-              size="large"
-            />
-            <TextField
-              label="Nhận xét của bạn"
-              multiline
-              rows={3}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              fullWidth
-            />
+            <Rating value={rating} onChange={(e, val) => setRating(val)} size="large" />
+            <TextField label="Nhận xét của bạn" multiline rows={3} value={comment} onChange={(e) => setComment(e.target.value)} fullWidth />
           </Box>
         </DialogContent>
         <DialogActions>

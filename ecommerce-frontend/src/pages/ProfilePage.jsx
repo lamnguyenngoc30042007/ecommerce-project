@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Paper,
-  Box,
-  Avatar,
-  IconButton,
-  Badge,
-  Stack,
-} from "@mui/material";
+import { Container, Typography, TextField, Button, Paper, Box, Avatar, IconButton, Badge, Stack } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -42,10 +31,9 @@ function ProfilePage() {
     if (!token) return;
 
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/users/profile",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get("https://ecommerce-project-i12t.onrender.com/api/users/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = {
         email: response.data.email || "",
         full_name: response.data.full_name || "",
@@ -99,7 +87,7 @@ function ProfilePage() {
     const token = localStorage.getItem("token");
     try {
       await axios.put(
-        "http://localhost:3000/api/users/profile",
+        "https://ecommerce-project-i12t.onrender.com/api/users/profile",
         { ...formData },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -141,12 +129,7 @@ function ProfilePage() {
                         "&:hover": { bgcolor: "#f0f0f0" },
                       }}
                     >
-                      <input
-                        hidden
-                        accept="image/*"
-                        type="file"
-                        onChange={handleImageUpload}
-                      />
+                      <input hidden accept="image/*" type="file" onChange={handleImageUpload} />
                       <PhotoCamera />
                     </IconButton>
                   ) : null
@@ -163,9 +146,7 @@ function ProfilePage() {
                     fontSize: "3rem",
                   }}
                 >
-                  {!formData.avatar_url && formData.full_name
-                    ? formData.full_name.charAt(0)
-                    : "U"}
+                  {!formData.avatar_url && formData.full_name ? formData.full_name.charAt(0) : "U"}
                 </Avatar>
               </Badge>
             </Box>
