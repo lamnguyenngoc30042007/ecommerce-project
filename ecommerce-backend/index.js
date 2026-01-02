@@ -18,7 +18,15 @@ const authorizeRole = require("./authorizeRole");
 const app = express();
 
 // Sử dụng cors (cho phép tất cả các nguồn gọi API)
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // Cho phép localhost (để cậu test ở nhà)
+      "https://ecommerce-project-sage-beta.vercel.app", // <--- THÊM DÒNG NÀY (Link Vercel của cậu)
+    ],
+    credentials: true,
+  })
+);
 
 // Tăng giới hạn lên 10MB để gửi được ảnh
 app.use(express.json({ limit: "10mb" }));
@@ -80,164 +88,127 @@ app.get("/api/products", async (req, res) => {
 // --- CÁC API DÀNH CHO ADMIN VÀ SALES ---
 
 // 12. THÊM SẢN PHẨM (Admin & Sales được phép)
-app.post(
-  "/api/products",
-  authenticateToken,
-  authorizeRole(["admin", "sales"]),
-  async (req, res) => {
-    try {
-      const {
+app.post("/api/products", authenticateToken, authorizeRole(["admin", "sales"]), async (req, res) => {
+  try {
+    const { name, description, detailed_description, price, stock_quantity, image_url, category_id } = req.body;
+
+    const newProduct = await prisma.product.create({
+      data: {
         name,
         description,
         detailed_description,
         price,
-        stock_quantity,
+        stock_quantity: parseInt(stock_quantity),
         image_url,
-        category_id,
-      } = req.body;
-
-      const newProduct = await prisma.product.create({
-        data: {
-          name,
-          description,
-          detailed_description,
-          price,
-          stock_quantity: parseInt(stock_quantity),
-          image_url,
-          category_id: parseInt(category_id),
-          createdById: req.userId, // Lưu ID của người đang đăng nhập (Sales/Admin)
-        },
-      });
-      res.status(201).json(newProduct);
-    } catch (error) {
-      res.status(500).json({ error: "Lỗi thêm sản phẩm" });
-    }
+        category_id: parseInt(category_id),
+        createdById: req.userId, // Lưu ID của người đang đăng nhập (Sales/Admin)
+      },
+    });
+    res.status(201).json(newProduct);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi thêm sản phẩm" });
   }
-);
+});
 
 // 13. SỬA SẢN PHẨM (Admin & Sales được phép)
 // API 5: Sửa sản phẩm (Chỉ Admin/Sales)
-app.put(
-  "/api/products/:id",
-  authenticateToken,
-  authorizeRole(["admin", "sales"]),
-  async (req, res) => {
-    try {
-      const { id } = req.params;
+app.put("/api/products/:id", authenticateToken, authorizeRole(["admin", "sales"]), async (req, res) => {
+  try {
+    const { id } = req.params;
 
-      // Lấy dữ liệu từ body
-      const {
+    // Lấy dữ liệu từ body
+    const { name, price, stock_quantity, description, detailed_description, image_url, category_id } = req.body;
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: parseInt(id) },
+      data: {
         name,
-        price,
-        stock_quantity,
         description,
         detailed_description,
         image_url,
-        category_id,
-      } = req.body;
-
-      const updatedProduct = await prisma.product.update({
-        where: { id: parseInt(id) },
-        data: {
-          name,
-          description,
-          detailed_description,
-          image_url,
-          // --- QUAN TRỌNG: PHẢI CHUYỂN ĐỔI SANG SỐ ---
-          price: parseFloat(price), // Chuyển giá thành số thực
-          stock_quantity: parseInt(stock_quantity), // Chuyển kho thành số nguyên
-          category_id: parseInt(category_id), // Chuyển danh mục thành số nguyên
-          isDeleted: false, // <--- Gỡ bỏ nhãn "Đã xóa"
-          // ------------------------------------------
-        },
-      });
-      res.json(updatedProduct);
-    } catch (error) {
-      console.error("Lỗi sửa sản phẩm:", error); // Log lỗi ra terminal để dễ xem
-      res.status(500).json({ error: "Lỗi sửa sản phẩm" });
-    }
+        // --- QUAN TRỌNG: PHẢI CHUYỂN ĐỔI SANG SỐ ---
+        price: parseFloat(price), // Chuyển giá thành số thực
+        stock_quantity: parseInt(stock_quantity), // Chuyển kho thành số nguyên
+        category_id: parseInt(category_id), // Chuyển danh mục thành số nguyên
+        isDeleted: false, // <--- Gỡ bỏ nhãn "Đã xóa"
+        // ------------------------------------------
+      },
+    });
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error("Lỗi sửa sản phẩm:", error); // Log lỗi ra terminal để dễ xem
+    res.status(500).json({ error: "Lỗi sửa sản phẩm" });
   }
-);
+});
 
 // 14. XÓA SẢN PHẨM (SOFT DELETE - Có kiểm tra quyền sở hữu)
-app.delete(
-  "/api/products/:id",
-  authenticateToken,
-  authorizeRole(["admin", "sales"]),
-  async (req, res) => {
-    try {
-      const productId = parseInt(req.params.id); // <-- Biến tên là productId
-      const userId = req.userId;
-      const userRole = req.userRole;
+app.delete("/api/products/:id", authenticateToken, authorizeRole(["admin", "sales"]), async (req, res) => {
+  try {
+    const productId = parseInt(req.params.id); // <-- Biến tên là productId
+    const userId = req.userId;
+    const userRole = req.userRole;
 
-      // 1. Tìm sản phẩm trước
-      const product = await prisma.product.findUnique({
-        where: { id: productId }, // <-- Dùng productId ở đây (Đúng)
+    // 1. Tìm sản phẩm trước
+    const product = await prisma.product.findUnique({
+      where: { id: productId }, // <-- Dùng productId ở đây (Đúng)
+    });
+
+    if (!product) return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
+
+    // 2. KIỂM TRA QUYỀN SỞ HỮU
+    // Nếu là Sales VÀ không phải là người tạo ra sản phẩm này -> Chặn
+    if (userRole === "sales" && product.createdById !== userId) {
+      return res.status(403).json({
+        error: "Bạn chỉ có thể xóa sản phẩm do chính mình đăng bán!",
       });
-
-      if (!product)
-        return res.status(404).json({ error: "Không tìm thấy sản phẩm" });
-
-      // 2. KIỂM TRA QUYỀN SỞ HỮU
-      // Nếu là Sales VÀ không phải là người tạo ra sản phẩm này -> Chặn
-      if (userRole === "sales" && product.createdById !== userId) {
-        return res.status(403).json({
-          error: "Bạn chỉ có thể xóa sản phẩm do chính mình đăng bán!",
-        });
-      }
-
-      // 3. Nếu là Admin hoặc là Chủ sở hữu -> Thực hiện Xóa mềm
-      await prisma.product.update({
-        where: { id: productId }, // <--- SỬA LẠI Ở ĐÂY: Dùng productId
-        data: {
-          isDeleted: true, // Đánh dấu đã xóa
-          stock_quantity: 0, // Set kho về 0
-        },
-      });
-
-      res.json({ message: "Đã xóa sản phẩm thành công" });
-    } catch (error) {
-      console.error("CHI TIẾT LỖI XÓA:", error);
-      res.status(500).json({ error: "Lỗi khi xóa sản phẩm: " + error.message });
     }
+
+    // 3. Nếu là Admin hoặc là Chủ sở hữu -> Thực hiện Xóa mềm
+    await prisma.product.update({
+      where: { id: productId }, // <--- SỬA LẠI Ở ĐÂY: Dùng productId
+      data: {
+        isDeleted: true, // Đánh dấu đã xóa
+        stock_quantity: 0, // Set kho về 0
+      },
+    });
+
+    res.json({ message: "Đã xóa sản phẩm thành công" });
+  } catch (error) {
+    console.error("CHI TIẾT LỖI XÓA:", error);
+    res.status(500).json({ error: "Lỗi khi xóa sản phẩm: " + error.message });
   }
-);
+});
 
 // --- API LẤY DANH SÁCH SẢN PHẨM CHO TRANG QUẢN LÝ (CÓ PHÂN QUYỀN) ---
-app.get(
-  "/api/admin/products",
-  authenticateToken,
-  authorizeRole(["admin", "sales"]),
-  async (req, res) => {
-    try {
-      const { userId, userRole } = req; // Lấy thông tin từ Token (do authMiddleware giải mã)
+app.get("/api/admin/products", authenticateToken, authorizeRole(["admin", "sales"]), async (req, res) => {
+  try {
+    const { userId, userRole } = req; // Lấy thông tin từ Token (do authMiddleware giải mã)
 
-      let whereClause = {};
+    let whereClause = {};
 
-      // LOGIC QUAN TRỌNG NHẤT Ở ĐÂY:
-      // Nếu là Sales: Chỉ tìm sản phẩm có createdById bằng ID của họ
-      if (userRole === "sales") {
-        whereClause = { createdById: userId };
-      }
-      // Nếu là Admin: whereClause vẫn là rỗng {} -> Nghĩa là lấy tất cả
-
-      const products = await prisma.product.findMany({
-        where: whereClause,
-        orderBy: { created_at: "desc" },
-        include: {
-          createdBy: {
-            // Lấy thêm tên người tạo để hiển thị cho Admin xem
-            select: { full_name: true, email: true },
-          },
-        },
-      });
-
-      res.json(products);
-    } catch (error) {
-      res.status(500).json({ error: "Lỗi lấy danh sách sản phẩm quản lý" });
+    // LOGIC QUAN TRỌNG NHẤT Ở ĐÂY:
+    // Nếu là Sales: Chỉ tìm sản phẩm có createdById bằng ID của họ
+    if (userRole === "sales") {
+      whereClause = { createdById: userId };
     }
+    // Nếu là Admin: whereClause vẫn là rỗng {} -> Nghĩa là lấy tất cả
+
+    const products = await prisma.product.findMany({
+      where: whereClause,
+      orderBy: { created_at: "desc" },
+      include: {
+        createdBy: {
+          // Lấy thêm tên người tạo để hiển thị cho Admin xem
+          select: { full_name: true, email: true },
+        },
+      },
+    });
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi lấy danh sách sản phẩm quản lý" });
   }
-);
+});
 
 // 4b. TẠO API TÌM KIẾM SẢN PHẨM (SEARCH)
 app.get("/api/products/search", async (req, res) => {
@@ -335,9 +306,7 @@ app.post("/api/users/register", async (req, res) => {
     });
 
     // Trả về thành công (status 201 - Created)
-    res
-      .status(201)
-      .json({ message: "Tạo tài khoản thành công", userId: newUser.id });
+    res.status(201).json({ message: "Tạo tài khoản thành công", userId: newUser.id });
   } catch (error) {
     console.error("Lỗi khi đăng ký:", error);
     res.status(500).json({ error: "Đã xảy ra lỗi khi đăng ký" });
@@ -453,8 +422,7 @@ app.get("/api/users/public/:id", async (req, res) => {
       },
     });
 
-    if (!user)
-      return res.status(404).json({ error: "Người dùng không tồn tại" });
+    if (!user) return res.status(404).json({ error: "Người dùng không tồn tại" });
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: "Lỗi lấy thông tin người bán" });
@@ -551,9 +519,7 @@ app.post("/api/orders/checkout", authenticateToken, async (req, res) => {
     // 1. Kiểm tra địa chỉ
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user.address || user.address.trim() === "") {
-      return res
-        .status(400)
-        .json({ error: "Vui lòng cập nhật địa chỉ giao hàng trong Hồ sơ!" });
+      return res.status(400).json({ error: "Vui lòng cập nhật địa chỉ giao hàng trong Hồ sơ!" });
     }
 
     // 2. Bắt đầu Giao dịch (Transaction)
@@ -591,10 +557,7 @@ app.post("/api/orders/checkout", authenticateToken, async (req, res) => {
         const shopItems = ordersBySeller[sellerIdKey];
 
         // Tính tổng tiền cho đơn hàng của Shop này
-        const shopTotal = shopItems.reduce(
-          (sum, item) => sum + Number(item.product.price) * item.quantity,
-          0
-        );
+        const shopTotal = shopItems.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0);
 
         // Tạo Order
         const newOrder = await tx.order.create({
@@ -621,14 +584,8 @@ app.post("/api/orders/checkout", authenticateToken, async (req, res) => {
           const product = await tx.product.findUnique({
             where: { id: item.product_id },
           });
-          if (
-            !product ||
-            product.isDeleted ||
-            product.stock_quantity < item.quantity
-          ) {
-            throw new Error(
-              `Sản phẩm ${product?.name || "này"} không đủ số lượng!`
-            );
+          if (!product || product.isDeleted || product.stock_quantity < item.quantity) {
+            throw new Error(`Sản phẩm ${product?.name || "này"} không đủ số lượng!`);
           }
           await tx.product.update({
             where: { id: item.product_id },
@@ -649,10 +606,7 @@ app.post("/api/orders/checkout", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Checkout error:", error);
-    const msg =
-      error.message.includes("Giỏ hàng") || error.message.includes("Sản phẩm")
-        ? error.message
-        : "Lỗi server khi đặt hàng";
+    const msg = error.message.includes("Giỏ hàng") || error.message.includes("Sản phẩm") ? error.message : "Lỗi server khi đặt hàng";
     res.status(400).json({ error: msg });
   }
 });
@@ -668,32 +622,23 @@ app.get("/api/categories", async (req, res) => {
 });
 
 // --- THÊM API TẠO DANH MỤC MỚI (Admin & Sales) ---
-app.post(
-  "/api/categories",
-  authenticateToken,
-  authorizeRole(["admin", "sales"]),
-  async (req, res) => {
-    try {
-      const { name } = req.body;
-      if (!name)
-        return res
-          .status(400)
-          .json({ error: "Tên danh mục không được để trống" });
+app.post("/api/categories", authenticateToken, authorizeRole(["admin", "sales"]), async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: "Tên danh mục không được để trống" });
 
-      // Kiểm tra xem danh mục đã tồn tại chưa
-      const existingCat = await prisma.category.findUnique({ where: { name } });
-      if (existingCat)
-        return res.status(400).json({ error: "Danh mục này đã tồn tại" });
+    // Kiểm tra xem danh mục đã tồn tại chưa
+    const existingCat = await prisma.category.findUnique({ where: { name } });
+    if (existingCat) return res.status(400).json({ error: "Danh mục này đã tồn tại" });
 
-      const newCategory = await prisma.category.create({
-        data: { name },
-      });
-      res.json(newCategory);
-    } catch (error) {
-      res.status(500).json({ error: "Lỗi tạo danh mục" });
-    }
+    const newCategory = await prisma.category.create({
+      data: { name },
+    });
+    res.json(newCategory);
+  } catch (error) {
+    res.status(500).json({ error: "Lỗi tạo danh mục" });
   }
-);
+});
 
 // 15. Lấy lịch sử mua hàng CỦA TÔI
 app.get("/api/orders/my-history", authenticateToken, async (req, res) => {
@@ -789,108 +734,99 @@ app.put(
   }
 );
 // --- API THỐNG KÊ (DASHBOARD) - HỖ TRỢ CẢ ADMIN VÀ SALES ---
-app.get(
-  "/api/admin/stats",
-  authenticateToken,
-  authorizeRole(["admin", "sales"]),
-  async (req, res) => {
-    try {
-      const { userId, userRole } = req;
+app.get("/api/admin/stats", authenticateToken, authorizeRole(["admin", "sales"]), async (req, res) => {
+  try {
+    const { userId, userRole } = req;
 
-      let stats = {
-        revenue: 0,
-        orders: 0,
-        products: 0,
-        customers: 0,
-        recentOrders: [],
-        chartData: [], // Dữ liệu để vẽ biểu đồ
-      };
+    let stats = {
+      revenue: 0,
+      orders: 0,
+      products: 0,
+      customers: 0,
+      recentOrders: [],
+      chartData: [], // Dữ liệu để vẽ biểu đồ
+    };
 
-      if (userRole === "admin") {
-        // --- LOGIC CHO ADMIN (Lấy hết) ---
-        const totalRevenue = await prisma.order.aggregate({
-          _sum: { total_price: true },
-          where: { status: { not: "cancelled" } },
-        });
-        stats.revenue = totalRevenue._sum.total_price || 0;
-        stats.orders = await prisma.order.count();
-        stats.products = await prisma.product.count({
-          where: { isDeleted: false },
-        });
-        stats.customers = await prisma.user.count({
-          where: { role: "customer" },
-        });
+    if (userRole === "admin") {
+      // --- LOGIC CHO ADMIN (Lấy hết) ---
+      const totalRevenue = await prisma.order.aggregate({
+        _sum: { total_price: true },
+        where: { status: { not: "cancelled" } },
+      });
+      stats.revenue = totalRevenue._sum.total_price || 0;
+      stats.orders = await prisma.order.count();
+      stats.products = await prisma.product.count({
+        where: { isDeleted: false },
+      });
+      stats.customers = await prisma.user.count({
+        where: { role: "customer" },
+      });
 
-        // Lấy 5 đơn mới nhất
-        stats.recentOrders = await prisma.order.findMany({
-          take: 5,
-          orderBy: { order_date: "desc" },
-          include: { user: { select: { full_name: true } } },
-        });
-      } else {
-        // --- LOGIC CHO SALES (Chỉ lấy của mình) ---
+      // Lấy 5 đơn mới nhất
+      stats.recentOrders = await prisma.order.findMany({
+        take: 5,
+        orderBy: { order_date: "desc" },
+        include: { user: { select: { full_name: true } } },
+      });
+    } else {
+      // --- LOGIC CHO SALES (Chỉ lấy của mình) ---
 
-        // 1. Tính tổng sản phẩm của mình
-        stats.products = await prisma.product.count({
-          where: { createdById: userId, isDeleted: false },
-        });
+      // 1. Tính tổng sản phẩm của mình
+      stats.products = await prisma.product.count({
+        where: { createdById: userId, isDeleted: false },
+      });
 
-        // 2. Lấy tất cả OrderItem thuộc về sản phẩm của Sales này (để tính tiền)
-        // Chỉ tính đơn đã giao hoặc đang xử lý (không tính đơn hủy)
-        const myOrderItems = await prisma.orderItem.findMany({
-          where: {
-            product: { createdById: userId }, // Sản phẩm của tôi
-            order: { status: { not: "cancelled" } }, // Đơn chưa hủy
-          },
-          include: { order: true },
-        });
+      // 2. Lấy tất cả OrderItem thuộc về sản phẩm của Sales này (để tính tiền)
+      // Chỉ tính đơn đã giao hoặc đang xử lý (không tính đơn hủy)
+      const myOrderItems = await prisma.orderItem.findMany({
+        where: {
+          product: { createdById: userId }, // Sản phẩm của tôi
+          order: { status: { not: "cancelled" } }, // Đơn chưa hủy
+        },
+        include: { order: true },
+      });
 
-        // 3. Tính tổng doanh thu từ các item đó
-        stats.revenue = myOrderItems.reduce((sum, item) => {
-          return sum + Number(item.price_at_purchase) * item.quantity;
-        }, 0);
+      // 3. Tính tổng doanh thu từ các item đó
+      stats.revenue = myOrderItems.reduce((sum, item) => {
+        return sum + Number(item.price_at_purchase) * item.quantity;
+      }, 0);
 
-        // 4. Đếm số đơn hàng (Unique Order ID)
-        const uniqueOrderIds = new Set(
-          myOrderItems.map((item) => item.order_id)
-        );
-        stats.orders = uniqueOrderIds.size;
+      // 4. Đếm số đơn hàng (Unique Order ID)
+      const uniqueOrderIds = new Set(myOrderItems.map((item) => item.order_id));
+      stats.orders = uniqueOrderIds.size;
 
-        // 5. Đếm số khách đã mua (Unique User ID)
-        const uniqueCustomerIds = new Set(
-          myOrderItems.map((item) => item.order.user_id)
-        );
-        stats.customers = uniqueCustomerIds.size;
+      // 5. Đếm số khách đã mua (Unique User ID)
+      const uniqueCustomerIds = new Set(myOrderItems.map((item) => item.order.user_id));
+      stats.customers = uniqueCustomerIds.size;
 
-        // 6. Lấy đơn hàng gần đây (để hiển thị list)
-        // Lấy 5 orderId mới nhất
-        const recentOrderIds = Array.from(uniqueOrderIds).slice(0, 5);
-        stats.recentOrders = await prisma.order.findMany({
-          where: { id: { in: recentOrderIds } },
-          include: { user: { select: { full_name: true } } },
-          orderBy: { order_date: "desc" },
-        });
-      }
-
-      // --- TẠO DỮ LIỆU BIỂU ĐỒ (Giả lập dữ liệu 7 ngày gần đây) ---
-      // (Trong thực tế bạn sẽ query group by date, nhưng ở đây mình làm giả lập cho đơn giản để demo)
-      stats.chartData = [
-        { name: "T2", doanhThu: stats.revenue * 0.1 },
-        { name: "T3", doanhThu: stats.revenue * 0.2 },
-        { name: "T4", doanhThu: stats.revenue * 0.15 },
-        { name: "T5", doanhThu: stats.revenue * 0.25 },
-        { name: "T6", doanhThu: stats.revenue * 0.1 },
-        { name: "T7", doanhThu: stats.revenue * 0.2 },
-        { name: "CN", doanhThu: 0 },
-      ];
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Lỗi thống kê:", error);
-      res.status(500).json({ error: "Lỗi lấy thống kê" });
+      // 6. Lấy đơn hàng gần đây (để hiển thị list)
+      // Lấy 5 orderId mới nhất
+      const recentOrderIds = Array.from(uniqueOrderIds).slice(0, 5);
+      stats.recentOrders = await prisma.order.findMany({
+        where: { id: { in: recentOrderIds } },
+        include: { user: { select: { full_name: true } } },
+        orderBy: { order_date: "desc" },
+      });
     }
+
+    // --- TẠO DỮ LIỆU BIỂU ĐỒ (Giả lập dữ liệu 7 ngày gần đây) ---
+    // (Trong thực tế bạn sẽ query group by date, nhưng ở đây mình làm giả lập cho đơn giản để demo)
+    stats.chartData = [
+      { name: "T2", doanhThu: stats.revenue * 0.1 },
+      { name: "T3", doanhThu: stats.revenue * 0.2 },
+      { name: "T4", doanhThu: stats.revenue * 0.15 },
+      { name: "T5", doanhThu: stats.revenue * 0.25 },
+      { name: "T6", doanhThu: stats.revenue * 0.1 },
+      { name: "T7", doanhThu: stats.revenue * 0.2 },
+      { name: "CN", doanhThu: 0 },
+    ];
+
+    res.json(stats);
+  } catch (error) {
+    console.error("Lỗi thống kê:", error);
+    res.status(500).json({ error: "Lỗi lấy thống kê" });
   }
-);
+});
 // --- API ĐÁNH GIÁ SẢN PHẨM (Logic thủ công: Tìm -> Sửa hoặc Thêm) ---
 app.post("/api/reviews", authenticateToken, async (req, res) => {
   try {
@@ -982,9 +918,7 @@ app.put("/api/reviews/:id", authenticateToken, async (req, res) => {
     }
 
     if (existingReview.userId !== userId) {
-      return res
-        .status(403)
-        .json({ error: "Bạn chỉ được sửa đánh giá của chính mình!" });
+      return res.status(403).json({ error: "Bạn chỉ được sửa đánh giá của chính mình!" });
     }
 
     // 2. Thực hiện cập nhật
